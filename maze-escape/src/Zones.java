@@ -95,4 +95,64 @@ public class Zones {
         }
     }
 
-    
+    /**
+     * Mission 5. The graph of zones: the edge X to Y costs the cheapest slide from X to Y, walking inside a zone is free.
+     * Go through the zones in the order of their numbers (no priority queue). Returns two numbers:
+     * [0] flow stages: the number of zones on the longest chain of zones;
+     * [1] the cost of the cheapest route from the zone of cell 0 to the zone of the last cell.
+     */
+    public static long[] routes(Input.Slides s, int[] zoneOf, int zoneCount) {
+        List<int[]>[] zoneAdj = new ArrayList[zoneCount];
+        for (int i = 0; i < zoneCount; i++) {
+            zoneAdj[i] = new ArrayList<>();
+        }
+
+        for (int i = 0; i < s.count(); i++) {
+            int u = s.from()[i];
+            int v = s.to()[i];
+            int w = s.time()[i];
+            int z1 = zoneOf[u];
+            int z2 = zoneOf[v];
+            if (z1 != z2) {
+                zoneAdj[z1].add(new int[]{z2, w});
+            }
+        }
+
+        long[] longestPath = new long[zoneCount];
+        long[] minCost = new long[zoneCount];
+        Arrays.fill(minCost, Long.MAX_VALUE);
+
+        int startZone = zoneOf[0];
+        int exitZone = zoneOf[s.n() - 1];
+
+        minCost[startZone] = 0;
+        longestPath[startZone] = 1;
+
+        for (int i = 0; i < zoneCount; i++) {
+            if (minCost[i] == Long.MAX_VALUE) continue;
+
+            for (int[] edge : zoneAdj[i]) {
+                int v = edge[0];
+                int weight = edge[1];
+
+                if (longestPath[i] + 1 > longestPath[v]) {
+                    longestPath[v] = longestPath[i] + 1;
+                }
+
+                if (minCost[i] + weight < minCost[v]) {
+                    minCost[v] = minCost[i] + weight;
+                }
+            }
+        }
+
+        long maxStages = 1;
+        for (int i = 0; i < zoneCount; i++) {
+            if (longestPath[i] > maxStages) {
+                maxStages = longestPath[i];
+            }
+        }
+
+        long routeCost = minCost[exitZone];
+        return new long[]{maxStages, routeCost};
+    }
+}
